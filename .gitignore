@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# 项目输出
+outputs/
+data/
+
+# 参考实现 (解压后)
+reference/
+
+# IDE
+.vscode/
+.idea/
