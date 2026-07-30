@@ -163,6 +163,8 @@ $$\mathcal{L}_{\text{recon}} = \frac{1}{N} \sum_{i=1}^{N} \left\| x_i - \hat{x}_
 
 $$D_{\text{KL}}\left(q_\phi(z | x) \| p(z)\right) = -\frac{1}{2} \sum_{j=1}^{D} \left(1 + \log \sigma_j^2 - \mu_j^2 - \sigma_j^2\right)$$
 
+> 代码与公式的逐项对应见 [notes/kl_divergence.md](notes/kl_divergence.md)，完整推导见 [notes/kl_derivation.md](notes/kl_derivation.md)。
+
 ---
 
 ### 二、采样（推理）
@@ -242,6 +244,9 @@ VAE-MNIST/
 │   └── img/                    # 训练过程可视化
 │       ├── reconstructions/    # 重建对比图
 │       └── samples/            # 随机采样图
+├── notes/                      # 学习笔记
+│   ├── kl_divergence.md        # KL 散度：代码与公式对应
+│   └── kl_derivation.md        # KL 散度：从定义到解析解的完整推导
 └── README.md
 ```
 
