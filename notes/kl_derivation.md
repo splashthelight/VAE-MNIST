@@ -1,4 +1,4 @@
-# KL 散度推导：从定义到 VAE 的解析解
+# KL 散度推导：从单变量到多变量
 
 ## 起点：KL 散度的定义
 
@@ -14,95 +14,100 @@ $$D_{\text{KL}}(q \| p) = \int q(z) \log \frac{q(z)}{p(z)} \, dz = \mathbb{E}_{z
 
 ---
 
-## 第一步：写出两个高斯分布的概率密度
+## 第一步：单变量推导
 
-$D$ 维高斯分布（对角协方差）的概率密度函数：
+先只看**一维**情况：$q = \mathcal{N}(\mu, \sigma^2)$，$p = \mathcal{N}(0, 1)$。
 
-$$\mathcal{N}(z; \mu, \Sigma) = \frac{1}{(2\pi)^{D/2} |\Sigma|^{1/2}} \exp\left(-\frac{1}{2}(z - \mu)^T \Sigma^{-1} (z - \mu)\right)$$
+两个正态分布的 PDF：
 
-取对数：
+$$q(z) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{(z-\mu)^2}{2\sigma^2}\right)$$
 
-$$\log \mathcal{N}(z; \mu, \Sigma) = -\frac{D}{2}\log(2\pi) - \frac{1}{2}\log|\Sigma| - \frac{1}{2}(z - \mu)^T \Sigma^{-1} (z - \mu)$$
+$$p(z) = \frac{1}{\sqrt{2\pi}} \exp\left(-\frac{z^2}{2}\right)$$
 
-**对于 $q(z|x)$**（对角协方差，每维方差 $\sigma_j^2$）：
+代入 KL 定义：
 
-$$\log q(z|x) = -\frac{D}{2}\log(2\pi) - \frac{1}{2}\sum_{j=1}^{D}\log\sigma_j^2 - \frac{1}{2}\sum_{j=1}^{D}\frac{(z_j - \mu_j)^2}{\sigma_j^2}$$
+$$D_{\text{KL}}(q \| p) = \int q(z) \log \frac{q(z)}{p(z)} \, dz$$
 
-**对于 $p(z) = \mathcal{N}(0, I)$**（$\mu=0$, $\sigma^2=1$）：
+先算对数比：
 
-$$\log p(z) = -\frac{D}{2}\log(2\pi) - \frac{1}{2}\sum_{j=1}^{D} z_j^2$$
+$$\log \frac{q(z)}{p(z)} = \log q(z) - \log p(z)$$
 
----
+$$= \left[-\frac{1}{2}\log(2\pi\sigma^2) - \frac{(z-\mu)^2}{2\sigma^2}\right] - \left[-\frac{1}{2}\log(2\pi) - \frac{z^2}{2}\right]$$
 
-## 第二步：计算对数比 $\log q(z|x) - \log p(z)$
+$$= -\frac{1}{2}\log\sigma^2 - \frac{(z-\mu)^2}{2\sigma^2} + \frac{z^2}{2}$$
 
-两式相减，$-\frac{D}{2}\log(2\pi)$ 被消掉：
+现在对 $z \sim q$ 取期望：
 
-$$\log q(z|x) - \log p(z) = -\frac{1}{2}\sum_{j=1}^{D}\log\sigma_j^2 - \frac{1}{2}\sum_{j=1}^{D}\frac{(z_j - \mu_j)^2}{\sigma_j^2} + \frac{1}{2}\sum_{j=1}^{D} z_j^2$$
+$$D_{\text{KL}}(q \| p) = \mathbb{E}_q\left[-\frac{1}{2}\log\sigma^2 - \frac{(z-\mu)^2}{2\sigma^2} + \frac{z^2}{2}\right]$$
 
----
+利用期望的线性性，逐项计算：
 
-## 第三步：对 $z \sim q$ 取期望
+**第 1 项**：$\mathbb{E}_q\left[-\frac{1}{2}\log\sigma^2\right] = -\frac{1}{2}\log\sigma^2$（常数）
 
-$$D_{\text{KL}}(q \| p) = \mathbb{E}_{z \sim q}\left[\log q(z|x) - \log p(z)\right]$$
+**第 2 项**：$\mathbb{E}_q\left[-\frac{(z-\mu)^2}{2\sigma^2}\right] = -\frac{1}{2\sigma^2}\mathbb{E}_q[(z-\mu)^2] = -\frac{1}{2\sigma^2} \cdot \sigma^2 = -\frac{1}{2}$
 
-利用期望的线性性，逐项计算。**先看单维**（下标 $j$），最后再求和：
+（这里用了方差定义：$\mathbb{E}[(z-\mu)^2] = \sigma^2$）
 
-$$\text{第 } j \text{ 维的贡献} = -\frac{1}{2}\log\sigma_j^2 - \frac{1}{2}\mathbb{E}_q\left[\frac{(z_j - \mu_j)^2}{\sigma_j^2}\right] + \frac{1}{2}\mathbb{E}_q[z_j^2]$$
+**第 3 项**：$\mathbb{E}_q\left[\frac{z^2}{2}\right] = \frac{1}{2}\mathbb{E}_q[z^2] = \frac{1}{2}(\sigma^2 + \mu^2)$
 
-分别计算三个期望：
+（这里用了 $\mathbb{E}[z^2] = \text{Var}(z) + (\mathbb{E}[z])^2 = \sigma^2 + \mu^2$）
 
-**期望 ①**：$\mathbb{E}_q\left[\frac{(z_j - \mu_j)^2}{\sigma_j^2}\right]$
+三项相加：
 
-由于 $z_j \sim \mathcal{N}(\mu_j, \sigma_j^2)$，所以 $\mathbb{E}_q[(z_j - \mu_j)^2] = \sigma_j^2$（方差的定义）。
+$$D_{\text{KL}}(q \| p) = -\frac{1}{2}\log\sigma^2 - \frac{1}{2} + \frac{1}{2}(\sigma^2 + \mu^2)$$
 
-$$\mathbb{E}_q\left[\frac{(z_j - \mu_j)^2}{\sigma_j^2}\right] = \frac{\sigma_j^2}{\sigma_j^2} = 1$$
+$$= \frac{1}{2}\left(-1 - \log\sigma^2 + \mu^2 + \sigma^2\right)$$
 
-**期望 ②**：$\mathbb{E}_q[z_j^2]$
-
-利用方差公式 $\mathbb{E}[z_j^2] = \text{Var}(z_j) + (\mathbb{E}[z_j])^2 = \sigma_j^2 + \mu_j^2$：
-
-$$\mathbb{E}_q[z_j^2] = \sigma_j^2 + \mu_j^2$$
+$$= -\frac{1}{2}\left(1 + \log\sigma^2 - \mu^2 - \sigma^2\right)$$
 
 ---
 
-## 第四步：代入，化单维结果
+## 第二步：推广到 D 维
 
-$$\text{第 } j \text{ 维} = -\frac{1}{2}\log\sigma_j^2 - \frac{1}{2}(1) + \frac{1}{2}(\sigma_j^2 + \mu_j^2)$$
+VAE 的隐变量是 $D$ 维向量 $z = (z_1, z_2, \ldots, z_D)$。
 
-$$= -\frac{1}{2}\log\sigma_j^2 - \frac{1}{2} + \frac{1}{2}\sigma_j^2 + \frac{1}{2}\mu_j^2$$
+关键：**对角协方差 = 各维度独立**，所以 $D$ 维联合 PDF 可分解为 $D$ 个独立单变量 PDF 的乘积：
 
-$$= \frac{1}{2}\left(-1 - \log\sigma_j^2 + \mu_j^2 + \sigma_j^2\right)$$
+$$q(z|x) = \prod_{j=1}^{D} q_j(z_j), \quad q_j = \mathcal{N}(\mu_j, \sigma_j^2)$$
 
-$$= -\frac{1}{2}\left(1 + \log\sigma_j^2 - \mu_j^2 - \sigma_j^2\right)$$
+$$p(z) = \prod_{j=1}^{D} p_j(z_j), \quad p_j = \mathcal{N}(0, 1)$$
 
----
+代入 KL 定义：
 
-## 第五步：求和，得到最终公式
+$$D_{\text{KL}}(q \| p) = \int q(z) \log \frac{q(z)}{p(z)} \, dz = \int q(z) \left[\sum_{j=1}^{D} \log \frac{q_j(z_j)}{p_j(z_j)}\right] dz$$
 
-对 $D$ 维求和：
+由期望的线性性，求和与积分可交换：
+
+$$= \sum_{j=1}^{D} \int q_j(z_j) \log \frac{q_j(z_j)}{p_j(z_j)} \, dz_j = \sum_{j=1}^{D} D_{\text{KL}}(q_j \| p_j)$$
+
+**D 维 KL = D 个单变量 KL 之和**。
+
+把第一步的单变量结果代入：
 
 $$D_{\text{KL}}\left(q_\phi(z | x) \| p(z)\right) = -\frac{1}{2} \sum_{j=1}^{D} \left(1 + \log \sigma_j^2 - \mu_j^2 - \sigma_j^2\right)$$
 
 ---
 
-## 回答你的问题
+## 与代码的对应
 
-### "-1/2 是？"
+```python
+kl_div = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
+```
 
-不是。$-\frac{1}{2}$ 是**代数化简的自然结果**，不是人为加的正则系数。它来自高斯分布 PDF 里的 $-\frac{1}{2}$ 系数，推导过程中一直带着。
+| 公式项 | 代码 | 含义 |
+|---|---|---|
+| $-\frac{1}{2}$ | `-0.5 *` | 前置系数 |
+| $\sum_{j=1}^{D}$ | `torch.sum(..., dim=1)` | 沿隐变量维度求和 |
+| $1$ | `1` | 常数 |
+| $\log \sigma_j^2$ | `logvar` | 对数方差 |
+| $\mu_j^2$ | `mu.pow(2)` | 均值平方 |
+| $\sigma_j^2$ | `logvar.exp()` | 方差 |
 
-### "是代到正态分布式子里吗？"
+---
 
-对，完整路径是：
+## 直觉
 
-> KL 定义 → 代入 $q$ 和 $p$ 的高斯 PDF → 取对数 → 取期望 → 利用高斯矩公式化简 → 得到解析解
-
-关键的一步是**期望的计算**：因为是对 $q$ 取期望，而 $q$ 本身就是高斯，所以 $\mathbb{E}[(z-\mu)^2] = \sigma^2$ 和 $\mathbb{E}[z^2] = \sigma^2 + \mu^2$ 可以直接算出来，不需要采样近似。这就是为什么叫"解析解" —— 有闭式表达式，不需要蒙特卡洛估计。
-
-### "为什么是这个式子？"
-
-直觉理解最终公式里每一项的作用：
+最终公式里每一项的作用：
 
 $$-\frac{1}{2}\left(\underbrace{1}_{\text{常数}} + \underbrace{\log\sigma_j^2}_{\text{方差小→负得多}} - \underbrace{\mu_j^2}_{\text{均值偏离→惩罚}} - \underbrace{\sigma_j^2}_{\text{方差大→惩罚}}\right)$$
 
